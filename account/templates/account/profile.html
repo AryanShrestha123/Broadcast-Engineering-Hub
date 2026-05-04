@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Profile — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<div class="detail-header animate-in"><div><h1>My Profile</h1><div class="dept">Manage your personal information and preferences</div></div></div>
+<div class="detail-grid">
+  <div class="detail-main">
+    <div class="card animate-in">
+      <h2>Personal Information</h2>
+      <form method="post" class="profile-form">
+        {% csrf_token %}
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-input" name="first_name" value="{{ request.user.first_name }}" /></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" name="last_name" value="{{ request.user.last_name }}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" value="{{ request.user.email }}" /></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-input" name="phone" value="{{ profile.phone }}" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Bio</label><textarea class="form-textarea" name="bio" rows="3">{{ profile.bio }}</textarea></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="window.location.reload()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+    <div class="card animate-in">
+      <h2>Work Information</h2>
+      <form method="post" class="profile-form">
+        {% csrf_token %}
+        <input type="hidden" name="first_name" value="{{ request.user.first_name }}" />
+        <input type="hidden" name="last_name" value="{{ request.user.last_name }}" />
+        <input type="hidden" name="email" value="{{ request.user.email }}" />
+        <input type="hidden" name="bio" value="{{ profile.bio }}" />
+        <input type="hidden" name="phone" value="{{ profile.phone }}" />
+        <input type="hidden" name="slack_channel" value="{{ profile.slack_channel }}" />
+        <input type="hidden" name="github_username" value="{{ profile.github_username }}" />
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Job Title</label><input class="form-input" name="role" value="{{ profile.role }}" /></div>
+          <div class="form-group"><label class="form-label">Location</label><input class="form-input" name="location" value="{{ profile.location }}" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Timezone</label>
+          <select class="form-input form-select" name="timezone">
+            <option {% if profile.timezone == "Pacific Time (PT)" %}selected{% endif %}>Pacific Time (PT)</option>
+            <option {% if profile.timezone == "Mountain Time (MT)" %}selected{% endif %}>Mountain Time (MT)</option>
+            <option {% if profile.timezone == "Central Time (CT)" %}selected{% endif %}>Central Time (CT)</option>
+            <option {% if profile.timezone == "Eastern Time (ET)" %}selected{% endif %}>Eastern Time (ET)</option>
+            <option {% if profile.timezone == "UTC" %}selected{% endif %}>UTC</option>
+            <option {% if profile.timezone == "GMT" %}selected{% endif %}>GMT</option>
+            <option {% if profile.timezone == "Central European Time (CET)" %}selected{% endif %}>Central European Time (CET)</option>
+            <option {% if profile.timezone == "Nepal Time (NPT)" %}selected{% endif %}>Nepal Time (NPT)</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="window.location.reload()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+    <div class="card animate-in">
+      <h2>Security</h2>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Change your password to keep your account secure.</p>
+      <a href="{% url 'change_password' %}" class="btn btn-secondary">Change Password</a>
+    </div>
+  </div>
+  <div class="detail-sidebar">
+    <div class="card animate-in" style="text-align:center">
+      <div class="profile-avatar-lg">{{ request.user.first_name|make_list|first }}{{ request.user.last_name|make_list|first }}</div>
+      <h3 style="font-weight:600;margin:12px 0 4px">{{ request.user.get_full_name }}</h3>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:4px">{{ profile.role }}</p>
+      <span class="badge badge-active">Active</span>
+    </div>
+    <div class="card animate-in">
+      <h2>Quick Info</h2>
+      <div class="contact-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><div><div class="label">Email</div><div class="sub">{{ request.user.email }}</div></div></div>
+      {% if profile.location %}<div class="contact-item"><div><div class="label">Location</div><div class="sub">{{ profile.location }}</div></div></div>{% endif %}
+      <div class="contact-item"><div><div class="label">Timezone</div><div class="sub">{{ profile.timezone }}</div></div></div>
+      {% if profile.team %}<div class="contact-item"><div><div class="label">Team</div><div class="sub">{{ profile.team.name }}</div></div></div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

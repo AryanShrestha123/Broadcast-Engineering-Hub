@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — Broadcast Engineering Hub</title>
+  <meta name="description" content="Create your account for the Broadcast Engineering Hub team registry portal" />
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+</head>
+<body>
+  <div class="login-page">
+    <!-- Left branding panel -->
+    <div class="login-left">
+      <div class="glow-1"></div>
+      <div class="glow-2"></div>
+      <div class="login-brand">
+        <div class="login-brand-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+        </div>
+        <h1>Broadcast Engineering Hub</h1>
+        <p>Your central portal for discovering and managing engineering teams across the organisation.</p>
+        <div class="login-stats">
+          <div class="login-stat"><div class="num">120+</div><div class="lbl">Teams</div></div>
+          <div class="login-stat"><div class="num">12</div><div class="lbl">Departments</div></div>
+          <div class="login-stat"><div class="num">850+</div><div class="lbl">Engineers</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="login-right">
+      <div class="login-form-wrap">
+        <h2>Create your account</h2>
+        <p class="subtitle">Sign up to access the engineering portal</p>
+
+        {% if messages %}
+        <div class="form-messages">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+        <div class="form-errors">
+          {% for error in form.non_field_errors %}
+          <div class="alert alert-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'account:signup_view' %}" id="signupForm" novalidate>
+          {% csrf_token %}
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label for="id_first_name">First Name</label>
+              <input type="text" name="first_name" id="id_first_name" class="form-input {% if form.first_name.errors %}input-error{% endif %}" placeholder="John" required maxlength="30" value="{{ form.first_name.value|default:'' }}" />
+              {% if form.first_name.errors %}<span class="field-error">{{ form.first_name.errors.0 }}</span>{% endif %}
+            </div>
+            <div class="form-group">
+              <label for="id_last_name">Last Name</label>
+              <input type="text" name="last_name" id="id_last_name" class="form-input {% if form.last_name.errors %}input-error{% endif %}" placeholder="Doe" required maxlength="30" value="{{ form.last_name.value|default:'' }}" />
+              {% if form.last_name.errors %}<span class="field-error">{{ form.last_name.errors.0 }}</span>{% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" class="form-input {% if form.username.errors %}input-error{% endif %}" placeholder="johndoe" required maxlength="150" value="{{ form.username.value|default:'' }}" />
+            {% if form.username.errors %}<span class="field-error">{{ form.username.errors.0 }}</span>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_email">Email</label>
+            <input type="email" name="email" id="id_email" class="form-input {% if form.email.errors %}input-error{% endif %}" placeholder="you@broadcast.com" required maxlength="255" value="{{ form.email.value|default:'' }}" />
+            {% if form.email.errors %}<span class="field-error">{{ form.email.errors.0 }}</span>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_password1">Password</label>
+            <div class="password-wrap">
+              <input type="password" name="password1" id="id_password1" class="form-input {% if form.password1.errors %}input-error{% endif %}" placeholder="••••••••" required />
+              <button type="button" class="password-toggle" id="togglePassword1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            {% if form.password1.errors %}<span class="field-error">{{ form.password1.errors.0 }}</span>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="id_password2">Confirm Password</label>
+            <div class="password-wrap">
+              <input type="password" name="password2" id="id_password2" class="form-input {% if form.password2.errors %}input-error{% endif %}" placeholder="••••••••" required />
+              <button type="button" class="password-toggle" id="togglePassword2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            {% if form.password2.errors %}<span class="field-error">{{ form.password2.errors.0 }}</span>{% endif %}
+          </div>
+
+          <button type="submit" class="login-submit">
+            <span>Create Account</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <span>Already have an account?</span>
+          <a href="{% url 'account:login_view' %}">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePw(btnId, inputId) {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      let show = false;
+      btn.addEventListener('click', () => {
+        show = !show;
+        input.type = show ? 'text' : 'password';
+      });
+    }
+    togglePw('togglePassword1', 'id_password1');
+    togglePw('togglePassword2', 'id_password2');
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Audit Log Entry - Broadcast Engineering Hub{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Delete Audit Log Entry</h1>
+    <p>Confirm deletion of this audit entry. Only admin users can delete audit records.</p>
+  </div>
+
+  <div class="card" style="padding: 20px; max-width: 800px;">
+    <p><strong>Time:</strong> {{ log_entry.created_at }}</p>
+    <p><strong>User:</strong> {% if log_entry.user %}{{ log_entry.user.username }}{% else %}System{% endif %}</p>
+    <p><strong>Action:</strong> {{ log_entry.action }}</p>
+    <p><strong>Path:</strong> {{ log_entry.path }}</p>
+    <p><strong>Details:</strong> {{ log_entry.description }}</p>
+
+    <form method="post" style="margin-top: 20px;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Confirm Delete</button>
+      <a href="{% url 'audit:log_list' %}" class="btn">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

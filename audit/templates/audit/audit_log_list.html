@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Log - Broadcast Engineering Hub{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Audit Log</h1>
+    <p>Only admin users can view audit history.</p>
+  </div>
+
+  <form method="get" class="search-form" style="margin-bottom: 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search actions, paths, usernames..." style="flex:1; padding:10px; border:1px solid #d1d5db; border-radius:8px;" />
+    <select name="method" style="padding:10px; border:1px solid #d1d5db; border-radius:8px;">
+        <option value="">All methods</option>
+        {% for option in methods_list %}
+            <option value="{{ option }}" {% if method == option %}selected{% endif %}>
+            {{ option }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filter</button>
+  </form>
+
+  <style>
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border-spacing: 0;
+      margin-top: 12px;
+    }
+
+    .audit-table th,
+    .audit-table td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .audit-table th:last-child,
+    .audit-table td:last-child {
+      border-right: none;
+    }
+
+    .audit-table th {
+      background: var(--secondary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .audit-table td {
+      word-break: break-word;
+    }
+
+    .audit-table td.details-col {
+      max-width: 260px;
+      white-space: normal;
+    }
+
+    .audit-table tr:hover td {
+      background: var(--surface-hover);
+    }
+
+    @media (max-width: 1024px) {
+      .audit-table {
+        table-layout: auto;
+      }
+    }
+  </style>
+
+  <div class="table-responsive">
+    <table class="table audit-table">
+      <colgroup>
+        <col style="width: 170px;" />
+        <col style="width: 140px;" />
+        <col style="width: 90px;" />
+        <col style="width: 150px;" />
+        <col style="width: 220px;" />
+        <col />
+        <col style="width: 100px;" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>User</th>
+          <th>Method</th>
+          <th>Action</th>
+          <th>Path</th>
+          <th>Details</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td>{{ log.created_at }}</td>
+            <td>
+                {% if log.user %}
+                    {{ log.user.username }}
+                {% else %}
+                    System
+                {% endif %}
+            </td>
+            <td>{{ log.method }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.path }}</td>
+            <td class="details-col">{{ log.description|truncatechars:120 }}</td>
+            <td>
+              <form method="post" action="{% url 'audit:delete_log' log.pk %}" onsubmit="return confirm('Delete this audit entry?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" style="padding:4px 8px;">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7">No audit log entries found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

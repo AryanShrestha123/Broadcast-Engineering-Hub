@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
 from django.db.models import Count, Q
+from dependencies.models import TeamDependency
 from teams.models import Team
 from account.models import CustomUser
 from .forms import TeamForm, TeamCreateForm
@@ -36,20 +37,23 @@ def team_view(request):
 
     return render(request, 'teams/teams.html', context)
 
+@login_required
 def team_detail_view(request, team_id):
     team = Team.objects.get(id=team_id)
     members = team.members.all()
+    upstream = TeamDependency.objects.filter(from_team=team, dependency_type='upstream')
+    downstream = TeamDependency.objects.filter(from_team=team, dependency_type='downstream')
 
     context = {
         'team': team,
         'members': members,
-        'upstream_teams': team.upstream_teams,
-        'downstream_teams': team.downstream_teams,
-        'all_dependencies': team.all_dependencies,
+        'upstream': upstream,
+        'downstream': downstream,
         'active_page': 'teams',
     }
     return render(request, 'teams/team_detail.html', context)
 
+@login_required
 def team_create_view(request):
     if not user_is_admin(request.user):
         messages.error(request, 'Only admins can create teams.')

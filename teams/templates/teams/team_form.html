@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<a href="{% url 'teams:team_view' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Teams</a>
+<div class="detail-header animate-in"><div><h1>{{ title }}</h1><div class="dept">Fill in the team details below</div></div></div>
+<div style="max-width:720px">
+  <div class="card animate-in">
+    <form method="post" class="profile-form">
+      {% csrf_token %}
+      {% for field in form %}
+        {% if field.name != 'members' %}
+          <div class="form-group">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:var(--destructive);font-size:12px;margin-top:4px">{{ field.errors.0 }}</p>{% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      {% if form.members %}
+        <div class="form-group">
+          <label class="form-label">{{ form.members.label }}</label>
+          <p style="font-size:13px;color:var(--muted);margin-top:-10px;margin-bottom:12px">Select available users to add to this team. Click the plus icon to include them.</p>
+          {{ form.members }}
+          {% if form.members.errors %}
+            <p style="color:var(--destructive);font-size:12px;margin-top:4px">{{ form.members.errors.0 }}</p>
+          {% endif %}
+          <div class="member-picker">
+            <button type="button" id="memberDropdownToggle" class="btn btn-secondary" style="width:100%;text-align:left;">Select members</button>
+            <div id="memberDropdownMenu" class="member-dropdown" style="display:none;">
+              {% for user in form.fields.members.queryset %}
+                <div class="member-dropdown-item" data-user-id="{{ user.pk }}">
+                  <span>{{ user.get_full_name }}{% if user.email %} — {{ user.email }}{% endif %}</span>
+                  <button type="button" class="member-add-btn">+</button>
+                </div>
+              {% empty %}
+                <div class="member-dropdown-empty">No available users to add.</div>
+              {% endfor %}
+            </div>
+            <div id="selectedMembers" class="selected-members"></div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <a href="{% url 'teams:team_view' %}" class="btn btn-secondary" style="text-decoration:none">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Team</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.member-picker { position: relative; }
+.member-dropdown { background:#fff;border:1px solid #d1d5db;border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.08);max-height:240px;overflow-y:auto;margin-top:8px; }
+.member-dropdown-item { display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;transition:background .2s; }
+.member-dropdown-item:hover { background:#f8fafc; }
+.member-dropdown-item.selected { background:#eff6ff; color:#1d4ed8; }
+.member-add-btn { border:1px solid #d1d5db;border-radius:50%;width:28px;height:28px;background:#fff;color:#111;font-weight:700;cursor:pointer;transition:background .2s,color .2s,border-color .2s; }
+.member-dropdown-item.selected .member-add-btn { background:#2563eb;color:#fff;border-color:#2563eb; }
+.member-dropdown-empty { padding:12px;color:#6b7280; }
+.selected-members { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+.selected-member-chip { display:flex;align-items:center;padding:6px 10px;border-radius:999px;background:#e2e8f0;color:#111;font-size:13px; }
+.selected-member-chip button { margin-left:8px;border:none;background:transparent;color:#6b7280;cursor:pointer;font-size:14px; }
+</style>
+
+<script>
+(function() {
+  const toggle = document.getElementById('memberDropdownToggle');
+  const menu = document.getElementById('memberDropdownMenu');
+  const selectedContainer = document.getElementById('selectedMembers');
+  const selectElement = document.getElementById('id_members');
+  if (!toggle || !menu || !selectedContainer || !selectElement) return;
+
+  function updateSelectedChips() {
+    selectedContainer.innerHTML = '';
+    Array.from(selectElement.options).forEach(function(option) {
+      if (option.selected) {
+        const chip = document.createElement('div');
+        chip.className = 'selected-member-chip';
+        chip.textContent = option.text;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', function() {
+          option.selected = false;
+          toggleItemState(option.value, false);
+          updateSelectedChips();
+        });
+        chip.appendChild(removeBtn);
+        selectedContainer.appendChild(chip);
+      }
+    });
+  }
+
+  function toggleItemState(userId, selected) {
+    const item = menu.querySelector('.member-dropdown-item[data-user-id="' + userId + '"]');
+    if (!item) return;
+    if (selected) {
+      item.classList.add('selected');
+      item.querySelector('.member-add-btn').textContent = '✓';
+    } else {
+      item.classList.remove('selected');
+      item.querySelector('.member-add-btn').textContent = '+';
+    }
+  }
+
+  function initState() {
+    Array.from(menu.querySelectorAll('.member-dropdown-item')).forEach(function(item) {
+      const userId = item.dataset.userId;
+      const option = selectElement.querySelector('option[value="' + userId + '"]');
+      if (option && option.selected) {
+        toggleItemState(userId, true);
+      }
+      item.addEventListener('click', function() {
+        const option = selectElement.querySelector('option[value="' + userId + '"]');
+        if (!option) return;
+        const selected = !option.selected;
+        option.selected = selected;
+        toggleItemState(userId, selected);
+        updateSelectedChips();
+      });
+    });
+    updateSelectedChips();
+  }
+
+  toggle.addEventListener('click', function() {
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  });
+
+  document.addEventListener('click', function(event) {
+    if (!toggle.contains(event.target) && !menu.contains(event.target)) {
+      menu.style.display = 'none';
+    }
+  });
+
+  initState();
+})();
+</script>
+
+{% endblock %}

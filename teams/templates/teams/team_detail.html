@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<a href="{% url 'teams:team_view' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Teams</a>
+<div class="detail-header animate-in">
+  <div><h1>{{ team.teamName }}</h1><div class="dept">{{ team.department.departmentName }}</div></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="badge badge-active" style="padding:6px 12px">{{ team.status }}</span>
+    {% if request.user.is_authenticated and request.user.is_staff or request.user.is_authenticated and request.user.is_superuser or request.user.is_authenticated and request.user.role == "Admin" or request.user.is_authenticated and request.user == team.teamLeader %}
+      <a href="{% url 'teams:team_edit_view' team.id %}" class="btn btn-secondary" style="text-decoration:none">Edit</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-main">
+
+    <div class="card animate-in">
+      <h2>Description</h2>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:16px">{{ team.description }}</p>
+    </div>
+    {% if members %}
+<div class="card animate-in">
+  <h2>Team Members ({{ members.count }})</h2>
+  
+  <div class="members-grid">
+    {% for member in members %}
+    <a href="{% url "account:profile_view" member.id %}">
+    <div class="member-card">
+      <div class="member-avatar">
+
+        {% if member.profilePicture %}
+          <img src="{{ member.profilePicture.url }}"
+               alt="{{ member.get_full_name }}"
+               style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+
+        {% else %}
+          <svg xmlns="http://www.w3.org/2000/svg"width="40" height="40"viewBox="0 0 24 24"fill="none"stroke="currentColor"stroke-width="2"stroke-linecap="round"stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        {% endif %}
+
+      </div>
+
+      <div>
+        <div class="name">{{ member.get_full_name }}</div>
+        <div class="role">{{ member.role|default:"Member" }}</div>
+      </div>
+    </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+    <div class="card animate-in">
+      <h2>Dependencies</h2>
+      <div class="deps-grid">
+        <div>
+          <div class="dep-label upstream"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 7 7 17"/><path d="M17 17H7V7"/></svg> Upstream (depends on)</div>
+          {% for u in upstream %}
+          <a href="{% url "teams:team_detail_view" u.to_team.id %}">
+            <div class="dep-tag upstream">{{ u.to_team }}</div>{% empty %}<p style="font-size:14px;color:var(--muted)">No upstream</p>
+          </a>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="dep-label downstream"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg> Downstream (depended by)</div>
+          {% for d in downstream %}
+          <a href="{% url "teams:team_detail_view" d.to_team.id %}">
+            <div class="dep-tag downstream">{{ d.to_team }}</div>{% empty %}<p style="font-size:14px;color:var(--muted)">No downstream</p>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="detail-sidebar">
+    <div class="card animate-in">
+      <h2>Contact</h2>
+      <div class="contact-item"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div><div class="label">{{ team.teamLeader.get_full_name }}</div><div class="sub">{{ team.teamLeader.email }}</div></div></div>
+      {% if team.contactChannel %}<div class="contact-item"><span class="contact-channel">{{ team.contactChannel }}</span></div>{% endif %}
+      {% if request.user != team.teamLeader %}
+        {% if team.teamLeader %}
+          <a href="{% url 'messaging:messages_compose' %}?to={{ team.teamLeader.id }}" class="btn btn-primary btn-full" style="margin-top:16px; text-align:center; display:inline-block">Send Message</a>
+        {% else %}
+          <button class="btn btn-primary btn-full" style="margin-top:16px; opacity:.7; cursor:not-allowed" disabled>No team leader assigned</button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block title %}Team Dependencies — Broadcast Engineering Hub{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+<style>
+  #dependency-diagram {
+    width: 100%;
+    height: 600px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fafbfc;
+  }
+  .diagram-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .diagram-legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-color {
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .upstream {
+    background: #3b82f6;
+  }
+  .downstream {
+    background: #10b981;
+  }
+  .node-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--muted);
+    border-radius: 3px;
+    color: #666;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header animate-in">
+  <div>
+    <h1>Team Dependencies</h1>
+    <p>Organizational structure showing upstream and downstream dependencies</p>
+  </div>
+  {% if create_access %}
+    <a href="{% url 'dependencies:dependency_create' %}" class="btn btn-primary" style="text-decoration:none">+ Add Dependency</a>
+  {% endif %}
+</div>
+
+<div class="diagram-legend">
+  <div class="legend-item">
+    <div class="legend-color upstream"></div>
+    <span>Upstream (Dependency)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-color downstream"></div>
+    <span>Downstream (Dependent)</span>
+  </div>
+</div>
+
+<div class="card animate-in" style="padding: 20px;">
+  <div id="dependency-diagram"></div>
+</div>
+
+<div style="margin-top: 24px;">
+  <h2>Dependencies List</h2>
+  <div class="card animate-in" style="padding:0;overflow:hidden">
+    {% if dependencies %}
+      <table style="width:100%;border-collapse:collapse">
+        <thead style="background:var(--surface);border-bottom:1px solid var(--border)">
+          <tr>
+            <th style="padding:12px;text-align:left;font-weight:600;font-size:12px;color:var(--muted)">FROM</th>
+            <th style="padding:12px;text-align:left;font-weight:600;font-size:12px;color:var(--muted)">TO</th>
+            <th style="padding:12px;text-align:left;font-weight:600;font-size:12px;color:var(--muted)">TYPE</th>
+            <th style="padding:12px;text-align:left;font-weight:600;font-size:12px;color:var(--muted)">DESCRIPTION</th>
+            <th style="padding:12px;text-align:left;font-weight:600;font-size:12px;color:var(--muted)">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dep in dependencies %}
+            <tr style="border-bottom:1px solid var(--border);hover:background:var(--surface)">
+              <td style="padding:12px">{{ dep.from_team.teamName }}</td>
+              <td style="padding:12px">{{ dep.to_team.teamName }}</td>
+              <td style="padding:12px">
+                <span>{{ dep.dependency_type}}</span>
+              </td>
+              <td style="padding:12px;font-size:12px;color:var(--muted)">{{ dep.description|truncatechars:50 }}</td>
+              {% if create_access or user == dep.from_team.teamLeader or user == dep.to_team.teamLeader %}
+              <td style="padding:12px;display:flex;gap:6px">
+                <a href="{% url 'dependencies:dependency_update' dep.pk %}" class="btn btn-sm" style="text-decoration:none;padding:6px 12px;font-size:12px">Edit</a>
+                <button class="btn btn-sm btn-danger delete-btn" data-id="{{ dep.pk }}" data-from="{{ dep.from_team.teamName }}" data-to="{{ dep.to_team.teamName }}" data-type="{{ dep.dependency_type }}" style="text-decoration:none;padding:6px 12px;font-size:12px;border:none;cursor:pointer">Delete</button>
+              </td>
+              {% else %}
+              <td style="padding:12px;display:flex;gap:6px"> No access</td>
+              {% endif %}
+              
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div style="padding:48px;text-align:center;color:var(--muted)">
+        <p>No dependencies yet.</p>
+        <a href="{% url 'dependencies:dependency_create' %}" style="color:var(--primary);font-weight:500">Add your first dependency</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;align-items:center;justify-content:center;padding:24px">
+  <div style="background:white;border-radius:16px;max-width:460px;width:100%;padding:28px;box-shadow:0 30px 60px rgba(0,0,0,0.18);">
+    <h2 style="margin-top:0;color:#dc2626">Delete Dependency</h2>
+    <p style="margin-bottom:24px">Are you sure you want to delete the dependency "<strong id="dependency-description"></strong>"?</p>
+    <form id="delete-form" method="post">
+      {% csrf_token %}
+      <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap">
+        <button type="button" id="delete-cancel" class="btn btn-secondary" style="text-decoration:none">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete Dependency</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  var nodes = new vis.DataSet({{ nodes|safe }});
+
+  var rawEdges = {{ edges|safe }};
+
+  
+  var seen = new Set();
+  var uniqueEdges = [];
+
+  rawEdges.forEach(edge => {
+    // strict identity (direction matters)
+    const key = `${edge.from}-${edge.to}-${edge.type}`;
+
+    if (!seen.has(key)) {
+      seen.add(key);
+
+      uniqueEdges.push({
+        id: key,               // IMPORTANT: stable unique ID
+        from: edge.from,
+        to: edge.to,
+        label: edge.label,
+        type: edge.type
+      });
+    }
+  });
+  // -----------------------------------------
+
+  // Build edges DataSet (NO update() needed)
+  var edges = new vis.DataSet(uniqueEdges);
+
+  // Node styling
+  nodes.update(nodes.map(function(node) {
+    return {
+      id: node.id,
+      label: node.label + '\n(' + node.department + ')',
+      color: {
+        background: '#f0f4f8',
+        border: '#3b82f6',
+        highlight: {
+          background: '#e0e7ff',
+          border: '#1e40af'
+        }
+      },
+      font: {
+        size: 14,
+        color: '#1f2937'
+      },
+      borderWidth: 2,
+      shadow: {
+        enabled: true,
+        color: 'rgba(0,0,0,0.1)',
+        size: 10,
+        x: 5,
+        y: 5
+      }
+    };
+  }));
+
+  // Edge styling (safe now because no update loop)
+  edges.forEach(function(edge) {
+    var color = edge.type === 'upstream' ? '#3b82f6' : '#10b981';
+
+    edges.update({
+      id: edge.id,
+      color: { color: color, highlight: color },
+      arrows: 'to',
+      font: { size: 11, color: '#666' },
+      smooth: { type: 'continuous' },
+      width: 2
+    });
+  });
+
+  var data = {
+    nodes: nodes,
+    edges: edges
+  };
+
+  var options = {
+    physics: {
+      enabled: true,
+      barnesHut: {
+        gravitationalConstant: -26000,
+        centralGravity: 0.005,
+        springLength: 200,
+        springConstant: 0.08
+      },
+      solver: 'barnesHut',
+      timestep: 0.35,
+      stabilization: {
+        iterations: 150
+      }
+    },
+    interaction: {
+      hover: true,
+      keyboard: true,
+      zoomView: true,
+      dragView: true
+    }
+  };
+
+  var container = document.getElementById('dependency-diagram');
+  var network = new vis.Network(container, data, options);
+
+  network.once('stabilizationIterationsDone', function() {
+    network.setOptions({ physics: false });
+  });
+
+  network.on('click', function(params) {
+    if (params.nodes.length > 0) {
+      console.log('Clicked node:', params.nodes[0]);
+    }
+  });
+
+  // Delete modal functionality
+  var deleteButtons = document.querySelectorAll('.delete-btn');
+  var modal = document.getElementById('delete-modal');
+  var deleteForm = document.getElementById('delete-form');
+  var dependencyDescription = document.getElementById('dependency-description');
+  var cancelButton = document.getElementById('delete-cancel');
+
+  deleteButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+      var depId = this.getAttribute('data-id');
+      var fromTeam = this.getAttribute('data-from');
+      var toTeam = this.getAttribute('data-to');
+      var depType = this.getAttribute('data-type');
+      
+      dependencyDescription.textContent = fromTeam + ' → ' + toTeam + ' (' + depType + ')';
+      deleteForm.action = '/dependencies/' + depId + '/delete/';
+      modal.style.display = 'flex';
+    });
+  });
+
+  if (cancelButton) {
+    cancelButton.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+  }
+
+  if (modal) {
+    modal.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
+
+});
+</script>
+{% endblock %}

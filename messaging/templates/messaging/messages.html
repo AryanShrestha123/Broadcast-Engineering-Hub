@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Messages — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<div class="page-header animate-in">
+  <div><h1>Messages</h1>
+    <p>
+      {% if view == 'sent' %}
+        Sent messages
+      {% elif view == 'drafts' %}
+        Draft messages
+      {% else %}
+        Inbox{% if unread_count %} — {{ unread_count }} unread{% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <a href="{% url 'messaging:messages_compose' %}" class="btn btn-primary" style="text-decoration:none">+ Compose</a>
+</div>
+
+<div class="tabs animate-in" style="margin-bottom:20px">
+  <a href="{% url 'messaging:messages_inbox' %}" 
+     class="tab-btn {% if view == 'inbox' %}active{% endif %}" 
+     style="text-decoration:none">
+     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+     Inbox
+  </a>
+
+  <a href="{% url 'messaging:messages_sent' %}" 
+     class="tab-btn {% if view == 'sent' %}active{% endif %}" 
+     style="text-decoration:none">
+     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+     Sent
+  </a>
+
+  <a href="{% url 'messaging:messages_drafts' %}" 
+     class="tab-btn {% if view == 'drafts' %}active{% endif %}" 
+     style="text-decoration:none">
+     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+     Drafts
+  </a>
+</div>
+
+<div class="card animate-in" style="padding:0;overflow:hidden">
+  {% for m in messages_list %}
+  <a href="{% url 'messaging:message_detail' m.pk %}" class="msg-item" style="text-decoration:none;color:inherit">
+    {% if m.sender.profilePicture %}
+      <img src="{{ m.sender.profilePicture.url }}"
+           alt="{{ m.sender.get_full_name }}"
+           class="msg-avatar"
+           style="width:35px;height:35px;border-radius:50%;object-fit:cover;">
+    {% else %}
+      <div class="msg-avatar">{{ m.sender_initials }}</div>
+    {% endif %}
+    <div class="msg-body">
+      <div class="msg-from">
+        <span class="{% if not m.is_read and view == 'inbox' %}font-semibold{% else %}font-medium{% endif %}">
+          {% if view == 'sent' %}To: {{ m.receiver.get_full_name|default:m.receiver.username }}{% else %}{{ m.sender.get_full_name|default:m.sender.username }}{% endif %}
+        </span>
+        {% if not m.is_read and view == 'inbox' %}<span class="msg-unread-dot"></span>{% endif %}
+      </div>
+      <div class="msg-subject">{{ m.subject }}</div>
+      <div class="msg-preview">{{ m.body|truncatechars:80 }}</div>
+    </div>
+    <span class="msg-time">{{ m.timestamp|timesince }} ago</span>
+  </a>
+  {% empty %}
+  <div style="padding:48px;text-align:center;color:var(--muted)">
+    <p>No messages yet.</p>
+    {% if view == 'inbox' %}<a href="{% url 'messaging:messages_compose' %}" style="color:var(--primary);font-weight:500">Send your first message</a>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

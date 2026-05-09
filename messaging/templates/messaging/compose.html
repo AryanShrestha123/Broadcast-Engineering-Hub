@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Compose Message — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<a href="{% url 'messaging:messages_inbox' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Messages</a>
+<div class="detail-header animate-in"><div><h1>Compose Message</h1><div class="dept">Send a message to a team member</div></div></div>
+<div style="max-width:640px">
+  <div class="card animate-in">
+    <form method="post" class="profile-form">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p style="color:var(--destructive);font-size:12px;margin-top:4px">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="form-actions">
+        <a href="{% url 'messaging:messages_inbox' %}" class="btn btn-secondary" style="text-decoration:none">Cancel</a>
+        <button type="submit" class="btn btn-secondary" name="save_draft" value="1">Save Draft</button>
+        <button type="submit" class="btn btn-primary">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

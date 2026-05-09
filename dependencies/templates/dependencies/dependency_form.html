@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Dependency — Broadcast Engineering Hub{% endblock %}
+
+{% block content %}
+<a href="{% url 'dependencies:dependency_list' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Dependencies</a>
+<div class="detail-header animate-in"><div><h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Dependency</h1><div class="dept">Manage team dependencies and relationships</div></div></div>
+<div style="max-width:640px">
+  <div class="card animate-in">
+    <form method="post" class="profile-form">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p style="color:var(--destructive);font-size:12px;margin-top:4px">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="form-actions">
+        <a href="{% url 'dependencies:dependency_list' %}" class="btn btn-secondary" style="text-decoration:none">Cancel</a>
+        <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Update{% else %}Create{% endif %} Dependency</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

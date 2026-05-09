@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ msg.subject }} — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<a href="{% url 'messaging:messages_inbox' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Messages</a>
+<div class="detail-header animate-in">
+  <div><h1>{{ msg.subject }}</h1><div class="dept">{{ msg.timestamp|timesince }} ago</div></div>
+  <div style="display:flex;gap:8px">
+    {% if msg.is_draft and msg.sender == request.user %}
+      <a href="{% url 'messaging:messages_compose' %}?draft_id={{ msg.pk }}" class="btn btn-primary" style="text-decoration:none">Edit Draft</a>
+    {% elif msg.sender != request.user %}
+      <a href="{% url 'messaging:messages_compose' %}?to={{ msg.sender.pk }}" class="btn btn-primary" style="text-decoration:none">Reply</a>
+    {% endif %}
+    <button id="delete-button" class="btn btn-danger" style="text-decoration:none;cursor:pointer">Delete</button>
+  </div>
+</div>
+<div class="card animate-in">
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    {% if msg.sender.profilePicture %}
+      <img src="{{ msg.sender.profilePicture.url }}"
+           alt="{{ msg.sender.get_full_name }}"
+           class="msg-avatar"
+           style="width:35px;height:35px;border-radius:50%;object-fit:cover;">
+    {% else %}
+      <div class="msg-avatar">{{ msg.sender_initials }}</div>
+    {% endif %}
+    <div>
+      <div style="font-weight:600;font-size:14px">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+      <div style="font-size:12px;color:var(--muted)">To: {{ msg.receiver.get_full_name|default:msg.receiver.username }}</div>
+    </div>
+  </div>
+  <div style="font-size:14px;line-height:1.7;white-space:pre-wrap">{{ msg.body }}</div>
+</div>
+
+<div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;align-items:center;justify-content:center;padding:24px">
+  <div style="background:white;border-radius:16px;max-width:460px;width:100%;padding:28px;box-shadow:0 30px 60px rgba(0,0,0,0.18);">
+    <h2 style="margin-top:0;color:#dc2626">Delete Message</h2>
+    <p style="margin-bottom:24px">Are you sure you want to delete the message "<strong>{{ msg.subject }}</strong>"?</p>
+    <form method="post" action="{% url 'messaging:message_delete' msg.pk %}">
+      {% csrf_token %}
+      <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap">
+        <button type="button" id="delete-cancel" class="btn btn-secondary" style="text-decoration:none">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var deleteButton = document.getElementById('delete-button');
+  var modal = document.getElementById('delete-modal');
+  var cancel = document.getElementById('delete-cancel');
+
+  if (deleteButton && modal && cancel) {
+    deleteButton.addEventListener('click', function() {
+      modal.style.display = 'flex';
+    });
+    cancel.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+    modal.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

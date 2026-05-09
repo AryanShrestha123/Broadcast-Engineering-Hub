@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ department.name }} — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<a href="{% url 'departments:department_view' %}" class="back-link"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Departments</a>
+<div class="detail-header animate-in">
+  <div><h1>{{ department.departmentName }}</h1><div class="dept">Led by {{ department.departmentLeader.get_full_name }}</div></div>
+  <span class="badge badge-primary" style="padding:6px 12px">{{ teams_count }} teams</span>
+</div>
+{% if department.description %}
+<div class="card animate-in" style="margin-bottom:24px">
+  <h2>About</h2>
+  <p style="font-size:14px;color:var(--muted)">{{ department.description }}</p>
+</div>
+{% endif %}
+<div class="section-header"><h2 class="section-title">Teams in this Department</h2></div>
+<div class="team-grid-2">
+  {% for team in teams %}
+  <a href="{% url 'teams:team_detail_view' team.id %}" class="card card-clickable animate-in" style="text-decoration:none;color:inherit">
+
+    <div class="team-card-header">
+      <div>
+        <h3>{{ team.teamName }}</h3>
+        <span class="team-card-dept">{{ team.department.departmentName }}</span>
+      </div>
+      <span class="badge badge-active">{{ team.status }}</span>
+    </div>
+
+    <div class="team-card-purpose">
+      {{ team.description|truncatechars:100 }}
+    </div>
+
+    <div class="team-card-meta">
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+        {{ team.member_count }} members
+      </span>
+
+      {% if team.contactChannel %}
+        <span>{{ team.contactChannel }}</span>
+      {% endif %}
+    </div>
+
+  </a>
+  {% empty %}
+    <p style="color:var(--muted)">No teams found.</p>
+  {% endfor %}
+</div>
+{% endblock %}

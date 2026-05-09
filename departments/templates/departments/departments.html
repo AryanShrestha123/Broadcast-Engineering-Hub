@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Departments — Broadcast Engineering Hub{% endblock %}
+{% block content %}
+<div class="page-header animate-in"><div><h1>Departments</h1><p>Organisational structure overview</p></div></div>
+<div class="dept-grid">
+  {% for dept in departments %}
+  <a href="{% url 'departments:department_detail_view' dept.pk %}" class="card card-clickable animate-in" style="text-decoration:none;color:inherit">
+    <div class="dept-header">
+      <div class="dept-icon" style="background:hsla(221,83%,53%,0.1);color:var(--primary)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg></div>
+      <span class="dept-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+    </div>
+    <h3 style="font-weight:600;font-size:18px;margin-bottom:4px">{{ dept.departmentName }}</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Led by {{ dept.departmentLeader.get_full_name }}</p>
+    <div class="team-card-meta">
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+        {{ dept.team_count }} teams
+      </span>
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {{ dept.member_count }} members
+      </span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
